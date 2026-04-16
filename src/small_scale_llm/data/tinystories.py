@@ -9,6 +9,9 @@ from typing import Iterator
 from urllib.request import urlretrieve
 
 
+TINYSTORIES_RECORD_SEPARATOR = "<|endoftext|>"
+
+
 @dataclass(frozen=True)
 class TinyStoriesConfig:
     """Configuration for one TinyStories split."""
@@ -84,19 +87,19 @@ def iter_tinystories_records(dataset_path: str | Path, split: str) -> Iterator[T
     """
     Yield normalized TinyStories records.
 
-    The current contract is one story per non-empty line with:
+    The current contract is one story per ``<|endoftext|>`` boundary with:
     ``text``, ``split``, ``record_index``, and ``source_path``.
     """
 
     source_path = Path(dataset_path)
-    with source_path.open("r", encoding="utf-8") as handle:
-        for record_index, line in enumerate(handle):
-            story_text = line.strip()
-            if not story_text:
-                continue
-            yield TinyStoryRecord(
-                text=story_text,
-                split=split,
-                record_index=record_index,
-                source_path=str(source_path),
-            )
+    raw_text = source_path.read_text(encoding="utf-8")
+    for record_index, chunk in enumerate(raw_text.split(TINYSTORIES_RECORD_SEPARATOR)):
+        story_text = chunk.strip()
+        if not story_text:
+            continue
+        yield TinyStoryRecord(
+            text=story_text,
+            split=split,
+            record_index=record_index,
+            source_path=str(source_path),
+        )

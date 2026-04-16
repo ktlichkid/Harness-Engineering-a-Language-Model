@@ -36,10 +36,19 @@ class TinyStoriesConfigTests(unittest.TestCase):
 
 
 class TinyStoriesRecordTests(unittest.TestCase):
-    def test_iter_tinystories_records_normalizes_story_schema(self) -> None:
+    def test_iter_tinystories_records_uses_story_separator_boundaries(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             dataset_path = Path(temp_dir) / "TinyStories-train.txt"
-            dataset_path.write_text("first story\n\nsecond story\n", encoding="utf-8")
+            dataset_path.write_text(
+                (
+                    "First line of story one.\n"
+                    "Second line of story one.\n"
+                    "<|endoftext|>\n"
+                    "Story two starts here.\n"
+                    "<|endoftext|>\n"
+                ),
+                encoding="utf-8",
+            )
 
             records = list(iter_tinystories_records(dataset_path, "train"))
 
@@ -47,14 +56,14 @@ class TinyStoriesRecordTests(unittest.TestCase):
         self.assertEqual(
             records[0].as_dict(),
             {
-                "text": "first story",
+                "text": "First line of story one.\nSecond line of story one.",
                 "split": "train",
                 "record_index": 0,
                 "source_path": str(dataset_path),
             },
         )
-        self.assertEqual(records[1].record_index, 2)
-        self.assertEqual(records[1].text, "second story")
+        self.assertEqual(records[1].record_index, 1)
+        self.assertEqual(records[1].text, "Story two starts here.")
 
 
 if __name__ == "__main__":
