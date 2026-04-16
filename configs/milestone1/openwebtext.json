@@ -1,0 +1,10 @@
+{
+  "dataset_id": "Skylion007/openwebtext",
+  "config_name": "plain_text",
+  "split": "train",
+  "cache_dir": "data/openwebtext",
+  "filename": "openwebtext-train.jsonl",
+  "rows_api_url": "https://datasets-server.huggingface.co/rows",
+  "page_size": 100,
+  "default_max_records": 100
+}
