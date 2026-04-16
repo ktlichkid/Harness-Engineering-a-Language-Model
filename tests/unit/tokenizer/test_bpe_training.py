@@ -25,12 +25,7 @@ class BPETrainingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             dataset_path = Path(temp_dir) / "TinyStories-valid.txt"
             dataset_path.write_text(
-                (
-                    "alpha beta\nline two\n"
-                    "<|endoftext|>\n"
-                    "alpha gamma\n"
-                    "<|endoftext|>\n"
-                ),
+                ("alpha beta\nline two\n<|endoftext|>\nalpha gamma\n<|endoftext|>\n"),
                 encoding="utf-8",
             )
 
