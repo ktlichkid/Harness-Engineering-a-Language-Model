@@ -16,7 +16,9 @@ class TinyStoriesConfigTests(unittest.TestCase):
         self.assertEqual(config.split, "train")
         self.assertEqual(config.filename, "TinyStories-train.txt")
         self.assertEqual(config.local_path, Path("data/tinystories/TinyStories-train.txt"))
-        self.assertIn("roneneldan/TinyStories/resolve/main/TinyStories-train.txt", config.source_url)
+        self.assertIn(
+            "roneneldan/TinyStories/resolve/main/TinyStories-train.txt", config.source_url
+        )
 
     def test_materialize_tinystories_split_uses_existing_cache_file(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

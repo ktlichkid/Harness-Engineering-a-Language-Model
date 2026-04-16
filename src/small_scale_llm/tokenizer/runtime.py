@@ -39,7 +39,9 @@ class BPETokenizer:
             merged_symbols = self._apply_merges(symbols)
             for symbol in merged_symbols:
                 if symbol not in self.token_to_id:
-                    raise ValueError(f"Token '{symbol}' is not present in the tokenizer vocabulary.")
+                    raise ValueError(
+                        f"Token '{symbol}' is not present in the tokenizer vocabulary."
+                    )
                 token_ids.append(self.token_to_id[symbol])
         return token_ids
 
