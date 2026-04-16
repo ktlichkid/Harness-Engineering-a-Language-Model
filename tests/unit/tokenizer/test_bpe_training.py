@@ -4,6 +4,8 @@ import unittest
 from pathlib import Path
 
 from small_scale_llm.tokenizer import (
+    BPETokenizer,
+    load_bpe_tokenizer,
     train_bpe_from_texts,
     train_bpe_from_tinystories,
     write_bpe_artifact,
@@ -25,12 +27,7 @@ class BPETrainingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             dataset_path = Path(temp_dir) / "TinyStories-valid.txt"
             dataset_path.write_text(
-                (
-                    "alpha beta\nline two\n"
-                    "<|endoftext|>\n"
-                    "alpha gamma\n"
-                    "<|endoftext|>\n"
-                ),
+                ("alpha beta\nline two\n<|endoftext|>\nalpha gamma\n<|endoftext|>\n"),
                 encoding="utf-8",
             )
 
@@ -54,6 +51,36 @@ class BPETrainingTests(unittest.TestCase):
         self.assertEqual(saved["merges"], artifact.merges)
         self.assertEqual(saved["vocab"], artifact.vocab)
         self.assertEqual(saved["token_to_id"], artifact.token_to_id)
+
+
+class BPERuntimeTests(unittest.TestCase):
+    def test_tokenizer_round_trips_with_normalized_whitespace_contract(self) -> None:
+        artifact = train_bpe_from_texts(["low lower", "lowest low"], target_vocab_size=20)
+        tokenizer = BPETokenizer.from_artifact(artifact)
+
+        token_ids = tokenizer.encode("low   lower")
+
+        self.assertEqual(tokenizer.decode(token_ids), "low lower")
+
+    def test_tokenizer_save_and_load_preserves_runtime_state(self) -> None:
+        artifact = train_bpe_from_texts(["alpha beta", "alpha"], target_vocab_size=20)
+        tokenizer = BPETokenizer.from_artifact(artifact)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = tokenizer.save(Path(temp_dir) / "tokenizer.json")
+            reloaded = load_bpe_tokenizer(path)
+
+        self.assertEqual(reloaded.to_dict(), tokenizer.to_dict())
+        self.assertEqual(reloaded.decode(reloaded.encode("alpha beta")), "alpha beta")
+
+    def test_tokenizer_encode_is_deterministic(self) -> None:
+        artifact = train_bpe_from_texts(["banana bandana"], target_vocab_size=20)
+        tokenizer = BPETokenizer.from_artifact(artifact)
+
+        first = tokenizer.encode("banana")
+        second = tokenizer.encode("banana")
+
+        self.assertEqual(first, second)
 
 
 if __name__ == "__main__":
