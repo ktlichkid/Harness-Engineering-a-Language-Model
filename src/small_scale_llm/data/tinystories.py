@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Iterator
 from urllib.request import urlretrieve
 
-
 TINYSTORIES_RECORD_SEPARATOR = "<|endoftext|>"
 
 

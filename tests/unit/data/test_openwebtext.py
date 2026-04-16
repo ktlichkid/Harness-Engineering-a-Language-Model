@@ -65,7 +65,10 @@ class OpenWebTextRecordTests(unittest.TestCase):
                 ]
             }
 
-            with patch("small_scale_llm.data.openwebtext.urlopen", return_value=io.StringIO(json.dumps(payload))):
+            with patch(
+                "small_scale_llm.data.openwebtext.urlopen",
+                return_value=io.StringIO(json.dumps(payload)),
+            ):
                 dataset_path = materialize_openwebtext_split(config, download=True)
 
             written_lines = dataset_path.read_text(encoding="utf-8").splitlines()
@@ -81,10 +84,7 @@ class OpenWebTextRecordTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             dataset_path = Path(temp_dir) / "openwebtext-train.jsonl"
             dataset_path.write_text(
-                (
-                    '{"text": " First document text. "}\n'
-                    '{"text": "Second document text."}\n'
-                ),
+                ('{"text": " First document text. "}\n{"text": "Second document text."}\n'),
                 encoding="utf-8",
             )
 
