@@ -6,14 +6,15 @@
 - Mark the sections that must be updated as Milestone 1 implementation lands.
 
 ## Current Repository State
-- The approved program design lives at `docs/design/program-design.md`.
+- The repository currently contains `requirement.md` and `AGENTS.md` on `main`.
+- The approved program design exists, but it is not merged into `main` yet.
 - Milestone 1 implementation code has not landed yet.
 - No Python package scaffold, dependency manifest, CI workflow, or runnable trainer exists on `main` yet.
 
 ## Current Review Prerequisites
 1. Clone the repository.
 2. Read `requirement.md` for the product requirements.
-3. Read `docs/design/program-design.md` for the approved milestone plan and constraints.
+3. If needed for planning context, review the approved design doc from its open or merged PR state rather than assuming it exists on `main`.
 
 Example:
 
