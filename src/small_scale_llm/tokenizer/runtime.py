@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from .bpe_training import BPEArtifact, END_OF_WORD
+from .bpe_training import END_OF_WORD, BPEArtifact
 
 
 @dataclass(frozen=True)
