@@ -19,9 +19,11 @@
 
 ## Assumptions
 - Python and PyTorch are the primary implementation stack.
-- GitHub Actions is the default CI system unless directed otherwise.
+- GitHub Actions is the required CI system.
 - TinyStories, OpenWebText, Common Crawl, and MATH are acceptable upstream datasets for this project.
 - Milestone 1 should be the only milestone ticketed immediately after approval; later milestones remain gated.
+- Milestone 1 development and validation target a single GeForce RTX 3080.
+- Later multi-GPU milestones may assume rented GPU capacity when that milestone begins.
 
 ## Risks
 - The Milestone 1 restriction on `torch.nn`, `torch.nn.functional`, and `torch.optim` increases implementation and test complexity.
@@ -29,16 +31,16 @@
 - Flash Attention 2 Triton work and FSDP or sharding work can create deep coupling in Milestone 2 if task boundaries are not enforced.
 - Data filtering quality and reasoning reward design can consume substantial time without clear acceptance metrics.
 
-## Open Questions
-- What GPU environment is available for Milestone 1 and later multi-GPU milestones?
-- Should GitHub Actions be the required CI target, or is another CI system expected?
-- What model size and training budget should define "runs successfully" for Milestone 1?
-- Are there repository, branch, or reviewer conventions beyond the provided AGENTS instructions?
-- What evidence will count as "demonstrated at the intended level" for Milestone 4?
+## Resolved Decisions
+- No repository, branch, or reviewer conventions apply beyond the provided AGENTS instructions.
+- Milestone 1 has no numeric quality bar, but the trained small model should generate simple children's stories with decent fluency as basic qualitative evidence.
+- Milestone 4 evidence may stay basic as long as each required method runs end to end and produces reviewable result artifacts.
 
 ## Execution Model
 - One program-level design doc governs the four-milestone sequence.
 - Only the active milestone may have open implementation issues.
+- Milestone 1 must treat the `torch.nn`, `torch.nn.functional`, and `torch.optim` restrictions as hard implementation constraints, with only the explicitly permitted exceptions from the requirement file.
+- Implementation tasks must be small enough to review safely. Target PR size is about 200 lines of code, and PRs over 500 lines should be avoided unless explicitly approved.
 - Each milestone ends with:
   - documentation updated
   - validation artifacts collected
@@ -51,6 +53,10 @@
 ### Milestone 1: Core Training Stack
 Goal:
 - Produce a single-GPU trainer with custom core components, checkpointing, automated tests, CI, and complete documentation.
+
+Hard Constraints:
+- Single-GPU training and validation target the available GeForce RTX 3080.
+- Do not use definitions from `torch.nn`, `torch.nn.functional`, or `torch.optim` other than the explicitly allowed exceptions in the requirement file.
 
 Task Breakdown:
 1. Repository scaffold and developer workflow
@@ -74,8 +80,9 @@ Exit Evidence:
 - Single-GPU train run completes.
 - Model and optimizer checkpoints save and reload correctly.
 - Tests pass.
-- CI runs successfully.
+- CPU-based GitHub CI runs successfully.
 - Documentation is complete.
+- A review artifact shows sample outputs with at least basic fluency for simple children's story generation.
 
 ### Milestone 2: Performance and Multi-GPU Training
 Goal:
@@ -124,7 +131,7 @@ Dependencies:
 ## CI/CD Requirements
 - Milestone 1 must add automated checks for linting, tests, and packaging or import sanity.
 - CI must gate merges for milestone-scoped branches or PRs.
-- GPU-required validation should be explicitly separated from CPU CI if hosted runners cannot execute it.
+- Hosted CI may remain CPU-based; GPU-required validation should be documented and run separately on the available local GPU.
 - Later milestones may extend CI, but milestone-specific validation must stay reviewable and reproducible.
 
 ## Dependency and Installation Requirements
@@ -139,10 +146,40 @@ Dependencies:
 - Architecture notes for major subsystem boundaries
 - Dataset preparation instructions and provenance notes where relevant
 
-## Proposed First Ticket Set After Approval
-1. Create Milestone 1 repository scaffold, local quality workflow, and CI baseline.
-2. Implement tokenizer and dataset preprocessing pipeline for TinyStories and OpenWebText.
-3. Implement transformer core and custom loss path under Milestone 1 restrictions.
-4. Implement AdamW, training loop, and checkpoint save/load.
-5. Add Milestone 1 tests, integration validation, and documentation.
-
+## Proposed Milestone 1 Ticket Set After Approval
+1. Repository layout and package scaffold
+   - Objective: create the Python package layout, config directories, and baseline module boundaries.
+2. Local quality workflow and GitHub CI baseline
+   - Objective: add formatter or lint tooling, test runner wiring, and CPU-based GitHub Actions checks.
+3. TinyStories dataset ingestion
+   - Objective: add reproducible download or load flow and normalized sample iteration for TinyStories.
+4. OpenWebText dataset ingestion
+   - Objective: add reproducible download or load flow and normalized sample iteration for OpenWebText.
+5. BPE vocabulary training
+   - Objective: implement merge statistics and vocab construction for tokenizer training.
+6. BPE encode or decode path
+   - Objective: implement runtime tokenization, detokenization, and tokenizer serialization.
+7. Token and position embedding modules
+   - Objective: implement trainable embedding layers and sequence position handling within the Milestone 1 restrictions.
+8. Attention math primitives
+   - Objective: implement attention projections, masking, score computation, and output projection.
+9. Feed-forward and normalization primitives
+   - Objective: implement the non-attention transformer block components required for the model stack.
+10. Transformer model assembly
+   - Objective: assemble the language model stack and logits path from the custom primitives.
+11. Custom cross-entropy loss
+   - Objective: implement the training loss path without using forbidden functional helpers.
+12. AdamW optimizer core
+   - Objective: implement optimizer state initialization and parameter update steps.
+13. Training step orchestration
+   - Objective: implement forward, backward, gradient application, and basic logging for one step or epoch loop.
+14. Model checkpoint serialization
+   - Objective: save and restore model state deterministically.
+15. Optimizer checkpoint serialization
+   - Objective: save and restore optimizer state deterministically.
+16. Single-GPU integration run
+   - Objective: run a minimal training job on the RTX 3080 and capture evidence that the stack trains and resumes.
+17. Core unit tests
+   - Objective: add focused tests for tokenizer, model primitives, loss, optimizer, and checkpoint code.
+18. Milestone 1 documentation and review runbook
+   - Objective: document setup, commands, validation evidence, and milestone review criteria.
