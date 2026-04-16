@@ -6,10 +6,10 @@
 - Mark the sections that must be updated as Milestone 1 implementation lands.
 
 ## Current Repository State
-- The repository currently contains `requirement.md` and `AGENTS.md` on `main`.
-- The approved program design exists, but it is not merged into `main` yet.
-- Milestone 1 implementation code has not landed yet.
-- No Python package scaffold, dependency manifest, CI workflow, or runnable trainer exists on `main` yet.
+- The repository contains the Milestone 1 package scaffold under `src/`, `tests/`, and `configs/`.
+- The repository contains the Milestone 1 setup and review docs under `docs/`.
+- No runnable trainer, dataset ingestion flow, tokenizer, model, optimizer, or checkpoint implementation exists on `main` yet.
+- This issue adds the initial CPU-based local quality and CI baseline.
 
 ## Current Review Prerequisites
 1. Clone the repository.
@@ -24,13 +24,27 @@ cd Harness-Engineering-a-Language-Model
 ```
 
 ## Current Setup Boundary
-- There is no repository-supported install command yet.
-- There are no repository-supported test, lint, or training commands yet.
+- The repository-supported install path for baseline quality checks is a clean virtual environment plus `pip install -e ".[dev]"`.
+- The repository-supported quality commands are limited to formatting, linting, compile checks, and the current test suite.
 - GPU setup instructions for the RTX 3080 are not documented yet because the Milestone 1 training stack has not landed.
+
+## Local Quality Baseline
+Run the baseline quality checks from a clean virtual environment:
+
+```bash
+python -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -e ".[dev]"
+.venv\Scripts\python -m ruff format --check .
+.venv\Scripts\python -m ruff check .
+.venv\Scripts\python -m compileall src tests
+.venv\Scripts\python -m pytest
+```
+
+These commands match the CPU-based baseline configured in GitHub Actions and avoid relying on unrelated global Python packages in a developer environment.
 
 ## Required Follow-Up Updates
 - Add Python environment and dependency installation steps once the scaffold and dependency choices are merged.
-- Add local quality-check commands once test and CI wiring exist.
 - Add dataset preparation commands once TinyStories and OpenWebText ingestion flows exist.
 - Add training and checkpoint commands once the trainer and serialization paths exist.
 - Add GPU-specific validation notes once the single-GPU integration path is implemented.
