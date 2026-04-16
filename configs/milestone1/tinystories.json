@@ -1,0 +1,14 @@
+{
+  "dataset_id": "roneneldan/TinyStories",
+  "cache_dir": "data/tinystories",
+  "splits": {
+    "train": {
+      "filename": "TinyStories-train.txt",
+      "source_url": "https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStories-train.txt"
+    },
+    "validation": {
+      "filename": "TinyStories-valid.txt",
+      "source_url": "https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStories-valid.txt"
+    }
+  }
+}
