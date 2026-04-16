@@ -6,9 +6,12 @@ from .bpe_training import (
     train_bpe_from_tinystories,
     write_bpe_artifact,
 )
+from .runtime import BPETokenizer, load_bpe_tokenizer
 
 __all__ = [
     "BPEArtifact",
+    "BPETokenizer",
+    "load_bpe_tokenizer",
     "train_bpe_from_texts",
     "train_bpe_from_tinystories",
     "write_bpe_artifact",
