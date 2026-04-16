@@ -89,6 +89,7 @@ Milestone 1 is complete only when:
 - checkpoint save/load works
 - tests are present and passing
 - CI/CD is in place and functioning
+- complete documentation
 - a human reviews and approves the milestone
 
 ---
@@ -115,6 +116,7 @@ Milestone 2 is complete only when:
 - performance and profiling infrastructure is usable
 - multi-GPU training is operational
 - distributed/sharded training functionality is working at the intended level
+- complete documentation
 - a human reviews and approves the milestone
 
 ---
@@ -142,6 +144,7 @@ Milestone 3 is complete only when:
 - filtering pipeline is implemented and usable
 - deduplication is implemented
 - the output data is in a form suitable for downstream training
+- complete documentation
 - a human reviews and approves the milestone
 
 ---
@@ -167,6 +170,7 @@ Milestone 4 is complete only when:
 - Expert Iteration is implemented
 - GRPO is implemented
 - verified-reward-based reasoning improvement is demonstrated at the intended level
+- complete documentation
 - a human reviews and approves the milestone
 
 ---
