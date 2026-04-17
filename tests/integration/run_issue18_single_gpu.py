@@ -80,10 +80,7 @@ def build_tokenizer_and_batches(
     if max_sequence_length <= 0:
         raise ValueError("training texts must produce at least two tokens per sequence")
 
-    batches = [
-        torch.tensor([token_ids], dtype=torch.int64, device=device)
-        for token_ids in encoded
-    ]
+    batches = [torch.tensor([token_ids], dtype=torch.int64, device=device) for token_ids in encoded]
     return tokenizer, batches, max_sequence_length
 
 
@@ -225,12 +222,10 @@ def run_issue18_single_gpu(output_dir: str | Path) -> dict[str, Any]:
     )
 
     reference_state = {
-        name: tensor.detach().cpu()
-        for name, tensor in reference_model.state_dict().items()
+        name: tensor.detach().cpu() for name, tensor in reference_model.state_dict().items()
     }
     resumed_state = {
-        name: tensor.detach().cpu()
-        for name, tensor in resumed_model.state_dict().items()
+        name: tensor.detach().cpu() for name, tensor in resumed_model.state_dict().items()
     }
 
     sample_story = generate_story(
