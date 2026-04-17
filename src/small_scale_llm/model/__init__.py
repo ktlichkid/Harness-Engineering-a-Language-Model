@@ -11,11 +11,13 @@ from .attention import (
 )
 from .embeddings import PositionEmbedding, TokenEmbedding, TokenPositionEmbedding
 from .feedforward import FeedForwardNetwork, gelu
+from .loss import cross_entropy_loss
 from .normalization import LayerNorm
 
 __all__ = [
     "build_causal_attention_mask",
     "compute_attention_scores",
+    "cross_entropy_loss",
     "FeedForwardNetwork",
     "gelu",
     "LayerNorm",
