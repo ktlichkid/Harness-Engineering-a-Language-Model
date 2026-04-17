@@ -12,9 +12,11 @@ from .attention import (
 from .embeddings import PositionEmbedding, TokenEmbedding, TokenPositionEmbedding
 from .feedforward import FeedForwardNetwork, gelu
 from .normalization import LayerNorm
+from .transformer import CausalSelfAttention, TransformerBlock, TransformerLanguageModel
 
 __all__ = [
     "build_causal_attention_mask",
+    "CausalSelfAttention",
     "compute_attention_scores",
     "FeedForwardNetwork",
     "gelu",
@@ -27,4 +29,6 @@ __all__ = [
     "split_attention_heads",
     "TokenEmbedding",
     "TokenPositionEmbedding",
+    "TransformerBlock",
+    "TransformerLanguageModel",
 ]
