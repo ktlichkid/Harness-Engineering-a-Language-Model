@@ -1,1 +1,1 @@
-"""Unit tests for checkpointing components."""
+"""Unit tests for checkpointing helpers."""
