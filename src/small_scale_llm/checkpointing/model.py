@@ -13,8 +13,7 @@ def save_model_checkpoint(model: Module, output_path: str | Path) -> Path:
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
-        name: tensor.detach().cpu().clone()
-        for name, tensor in model.state_dict().items()
+        name: tensor.detach().cpu().clone() for name, tensor in model.state_dict().items()
     }
     torch.save(state_dict, destination)
     return destination
