@@ -13,9 +13,11 @@ from .embeddings import PositionEmbedding, TokenEmbedding, TokenPositionEmbeddin
 from .feedforward import FeedForwardNetwork, gelu
 from .loss import cross_entropy_loss
 from .normalization import LayerNorm
+from .transformer import CausalSelfAttention, TransformerBlock, TransformerLanguageModel
 
 __all__ = [
     "build_causal_attention_mask",
+    "CausalSelfAttention",
     "compute_attention_scores",
     "cross_entropy_loss",
     "FeedForwardNetwork",
@@ -29,4 +31,6 @@ __all__ = [
     "split_attention_heads",
     "TokenEmbedding",
     "TokenPositionEmbedding",
+    "TransformerBlock",
+    "TransformerLanguageModel",
 ]
