@@ -17,6 +17,10 @@ class CausalSelfAttentionTests(unittest.TestCase):
 
         self.assertEqual(tuple(output.shape), (1, 2, 4))
 
+    def test_attention_rejects_hidden_size_not_divisible_by_num_heads(self) -> None:
+        with self.assertRaisesRegex(ValueError, "divisible by num_heads"):
+            CausalSelfAttention(hidden_size=5, num_heads=2)
+
 
 class TransformerBlockTests(unittest.TestCase):
     def test_transformer_block_preserves_sequence_hidden_shape(self) -> None:
@@ -62,6 +66,17 @@ class TransformerLanguageModelTests(unittest.TestCase):
         self.assertIn("final_norm.weight", parameter_names)
         self.assertIn("output_weight", parameter_names)
         self.assertIn("output_bias", parameter_names)
+
+    def test_language_model_rejects_non_positive_layer_count(self) -> None:
+        with self.assertRaisesRegex(ValueError, "num_layers must be positive"):
+            TransformerLanguageModel(
+                vocab_size=7,
+                max_sequence_length=4,
+                hidden_size=4,
+                num_heads=2,
+                intermediate_size=6,
+                num_layers=0,
+            )
 
 
 if __name__ == "__main__":

@@ -69,6 +69,15 @@ class TrainingStepTests(unittest.TestCase):
         self.assertEqual(logs[1]["step"], 1)
         self.assertTrue(all(entry["tokens"] == 3 for entry in logs))
 
+    def test_run_training_step_honors_ignore_index_in_token_count(self) -> None:
+        model, optimizer = self._build_model_and_optimizer()
+        token_ids = torch.tensor([[1, 2, 3, -1]], dtype=torch.int64)
+
+        logs = run_training_step(model, optimizer, token_ids, ignore_index=-1)
+
+        self.assertEqual(logs["tokens"], 2)
+        self.assertGreater(logs["loss"], 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()

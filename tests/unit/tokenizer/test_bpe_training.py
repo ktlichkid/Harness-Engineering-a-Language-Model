@@ -82,6 +82,23 @@ class BPERuntimeTests(unittest.TestCase):
 
         self.assertEqual(first, second)
 
+    def test_tokenizer_encode_rejects_unknown_symbol_after_merge_application(self) -> None:
+        tokenizer = BPETokenizer(
+            vocab=["a</w>"],
+            merges=[],
+            token_to_id={"a</w>": 0},
+        )
+
+        with self.assertRaisesRegex(ValueError, "is not present in the tokenizer vocabulary"):
+            tokenizer.encode("b")
+
+    def test_tokenizer_decode_rejects_unknown_token_id(self) -> None:
+        artifact = train_bpe_from_texts(["alpha beta"], target_vocab_size=20)
+        tokenizer = BPETokenizer.from_artifact(artifact)
+
+        with self.assertRaisesRegex(ValueError, "is not present in the tokenizer state"):
+            tokenizer.decode([9999])
+
 
 if __name__ == "__main__":
     unittest.main()
