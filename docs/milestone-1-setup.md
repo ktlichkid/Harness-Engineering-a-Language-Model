@@ -1,54 +1,70 @@
 # Milestone 1 Setup
 
 ## Purpose
-- Describe the current Milestone 1 repository state.
-- Record setup steps that are valid today without guessing future commands.
-- Mark the sections that must be updated as Milestone 1 implementation lands.
+- Describe the delivered Milestone 1 repository state on `main`.
+- Record the repository-supported setup and validation steps that exist today.
+- Separate CPU-baseline validation from the GPU-only integration evidence path.
 
 ## Current Repository State
-- The repository contains the Milestone 1 package scaffold under `src/`, `tests/`, and `configs/`.
-- The repository contains the Milestone 1 setup and review docs under `docs/`.
-- No runnable trainer, dataset ingestion flow, tokenizer, model, optimizer, or checkpoint implementation exists on `main` yet.
-- This issue adds the initial CPU-based local quality and CI baseline.
+- `src/small_scale_llm/` contains the delivered Milestone 1 tokenizer, dataset loaders, model stack, optimizer, training loop, and checkpoint helpers.
+- `tests/unit/` contains focused CPU-executable coverage for the Milestone 1 component contracts.
+- `tests/integration/run_issue18_single_gpu.py` contains the minimum RTX 3080 integration harness used for Milestone 1 review evidence.
+- `artifacts/issue18/` contains committed review artifacts from the single-GPU integration run.
+- `.github/workflows/ci.yml` contains the CPU-based baseline checks used to validate the Milestone 1 codebase on GitHub Actions.
 
-## Current Review Prerequisites
+## Review Prerequisites
 1. Clone the repository.
 2. Read `requirement.md` for the product requirements.
-3. If needed for planning context, review the approved design doc from its open or merged PR state rather than assuming it exists on `main`.
+3. Read `docs/design/program-design.md` for the approved milestone plan.
+4. Read `docs/milestone-1-review-runbook.md` before requesting human approval.
 
 Example:
 
-```bash
+```powershell
 git clone git@github.com:ktlichkid/Harness-Engineering-a-Language-Model.git
 cd Harness-Engineering-a-Language-Model
 ```
 
-## Current Setup Boundary
-- The repository-supported install path for baseline quality checks is a clean virtual environment plus `pip install -e ".[dev]"`.
-- The repository-supported quality commands are limited to formatting, linting, compile checks, and the current test suite.
-- GPU setup instructions for the RTX 3080 are not documented yet because the Milestone 1 training stack has not landed.
+## CPU Baseline Setup
+The repository-supported CPU install path is a clean virtual environment plus the editable dev install:
 
-## Local Quality Baseline
-Run the baseline quality checks from a clean virtual environment:
-
-```bash
+```powershell
 python -m venv .venv
-.venv\Scripts\python -m pip install --upgrade pip
-.venv\Scripts\python -m pip install -e ".[dev]"
-.venv\Scripts\python -m ruff format --check .
-.venv\Scripts\python -m ruff check .
-.venv\Scripts\python -m compileall src tests
-.venv\Scripts\python -m pytest
+.\.venv\Scripts\python -m pip install --upgrade pip
+.\.venv\Scripts\python -m pip install -e ".[dev]"
 ```
 
-These commands match the CPU-based baseline configured in GitHub Actions and avoid relying on unrelated global Python packages in a developer environment.
+Run the repository baseline checks from that environment:
 
-## Required Follow-Up Updates
-- Add Python environment and dependency installation steps once the scaffold and dependency choices are merged.
-- Add dataset preparation commands once TinyStories and OpenWebText ingestion flows exist.
-- Add training and checkpoint commands once the trainer and serialization paths exist.
-- Add GPU-specific validation notes once the single-GPU integration path is implemented.
+```powershell
+.\.venv\Scripts\python -m ruff format --check .
+.\.venv\Scripts\python -m ruff check .
+.\.venv\Scripts\python -m compileall src tests
+.\.venv\Scripts\python -m unittest discover -s tests -p "test_*.py"
+```
 
-## Documentation Update Rule
-- Update this document only with commands that exist in the repository at the time of the edit.
-- If a Milestone 1 command is still pending, record it as a follow-up item instead of inventing syntax or behavior.
+These commands match the CPU-based baseline enforced in `.github/workflows/ci.yml`.
+
+## Dataset and Training Surfaces
+- TinyStories ingestion lives in `small_scale_llm.data.tinystories`.
+- OpenWebText ingestion lives in `small_scale_llm.data.openwebtext`.
+- BPE training and runtime tokenization live in `small_scale_llm.tokenizer`.
+- Model, loss, optimizer, training, and checkpointing live under `small_scale_llm.model`, `small_scale_llm.optim`, `small_scale_llm.training`, and `small_scale_llm.checkpointing`.
+- Milestone 1 does not include a dedicated end-user CLI; the supported evidence path is the checked-in integration harness plus the unit and CI validations above.
+
+## Single-GPU Validation Path
+Milestone 1 GPU validation was executed from an isolated `.venv-gpu` environment that is intentionally not part of the committed repository changes.
+
+Use that isolated environment only for the single-GPU evidence path:
+
+```powershell
+.\.venv-gpu\Scripts\python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.device_count()); print(torch.cuda.get_device_name(0))"
+.\.venv-gpu\Scripts\python tests\integration\run_issue18_single_gpu.py
+```
+
+Expected review artifacts:
+- `artifacts/issue18/run_summary.json`
+- `artifacts/issue18/training_log.json`
+- `artifacts/issue18/generated_story.txt`
+
+The exact CUDA-enabled PyTorch wheel source is environment-specific and intentionally was not committed into the repository setup path. The required condition for GPU validation is that the isolated environment reports the local RTX 3080 through `torch.cuda`.
