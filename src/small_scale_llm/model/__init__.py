@@ -10,10 +10,15 @@ from .attention import (
     split_attention_heads,
 )
 from .embeddings import PositionEmbedding, TokenEmbedding, TokenPositionEmbedding
+from .feedforward import FeedForwardNetwork, gelu
+from .normalization import LayerNorm
 
 __all__ = [
     "build_causal_attention_mask",
     "compute_attention_scores",
+    "FeedForwardNetwork",
+    "gelu",
+    "LayerNorm",
     "merge_attention_heads",
     "PositionEmbedding",
     "project_attention_inputs",
