@@ -3,7 +3,16 @@
 ## Objective
 - Deliver the project in exactly four gated milestones.
 - Stop after each milestone for human review and explicit approval before any work on the next milestone.
-- Keep implementation traceable through small issues, isolated branches, CI checks, and milestone-specific documentation.
+- Make each milestone reviewable as a real GitHub delivery, not just as a partial internal implementation.
+
+## Current Milestone 1 Status
+- The repository contains a partial Milestone 1 implementation on `main`.
+- Milestone 1 is not yet considered delivered.
+- Remaining Milestone 1 work must close the gaps identified in human review:
+  - a runnable end-to-end `train.py` for TinyStories on one GPU
+  - a supported generation API for trained checkpoints
+  - CI that runs a real training smoke and checks loss behavior
+  - documentation written for external GitHub users with zero project context
 
 ## In Scope
 - Tokenizer, model, training loop, optimizer, checkpointing
@@ -12,77 +21,120 @@
 - MATH evaluation, supervised fine-tuning, Expert Iteration, and GRPO
 
 ## Out of Scope
-- End-user productization
 - UI, inference serving, or deployment platform work
 - General MLOps platformization beyond milestone needs
+- Product polish beyond what is needed to train, resume, and generate with the model
 - Safety or alignment work beyond required filtering and verified-reward methods
 
 ## Assumptions
-- Python and PyTorch are the primary implementation stack.
-- GitHub Actions is the required CI system.
-- TinyStories, OpenWebText, Common Crawl, and MATH are acceptable upstream datasets for this project.
-- Milestone 1 should be the only milestone ticketed immediately after approval; later milestones remain gated.
-- Milestone 1 development and validation target a single GeForce RTX 3080.
-- Later multi-GPU milestones may assume rented GPU capacity when that milestone begins.
+- Python and PyTorch remain the implementation stack.
+- GitHub Actions remains the required CI system.
+- TinyStories is the Milestone 1 primary training dataset for end-to-end delivery.
+- OpenWebText remains part of the Milestone 1 data surface, but TinyStories is the required end-to-end user path.
+- Milestone 1 targets a single GeForce RTX 3080 for GPU training and validation.
+- External GitHub users must be able to understand setup, training, resume, and generation flows without prior project context.
+
+## Open Questions For Human Review
+- CI loss gate: use a deterministic TinyStories smoke fixture and require finite loss plus a bounded final loss after a fixed number of steps. The exact numeric upper bound should be locked during implementation after measuring the deterministic smoke run once.
+- Generation API surface: library API is required; a separate CLI generator is optional and should not be added unless explicitly requested during task approval.
 
 ## Risks
-- The Milestone 1 restriction on `torch.nn`, `torch.nn.functional`, and `torch.optim` increases implementation and test complexity.
-- GPU-dependent validation may not be fully executable in hosted CI and may require a split between CPU CI and manual or self-hosted GPU validation.
-- Flash Attention 2 Triton work and FSDP or sharding work can create deep coupling in Milestone 2 if task boundaries are not enforced.
-- Data filtering quality and reasoning reward design can consume substantial time without clear acceptance metrics.
+- The Milestone 1 restriction on `torch.nn`, `torch.nn.functional`, and `torch.optim` still increases implementation and test complexity.
+- A user-friendly `train.py` can broaden scope unless the feature set is kept to the minimum required single-GPU training path.
+- CI training smoke must be small and deterministic enough for hosted runners while still proving real training behavior.
+- Story fluency is qualitative; without a narrow acceptance path, review can drift into subjective redefinition of Milestone 1.
 
 ## Resolved Decisions
-- No repository, branch, or reviewer conventions apply beyond the provided AGENTS instructions.
-- Milestone 1 has no numeric quality bar, but the trained small model should generate simple children's stories with decent fluency as basic qualitative evidence.
-- Milestone 4 evidence may stay basic as long as each required method runs end to end and produces reviewable result artifacts.
+- GitHub is the source of truth for readiness and delivery state.
+- Milestone 1 is not complete until a user can clone the repo, follow the docs, run a training entry point, resume from checkpoints, and generate story output from the trained model.
+- Reviewer-facing milestone evidence and user-facing project documentation are both required; one does not replace the other.
+- Milestone 1 recovery work must stay scoped to finishing the promised core training stack, not expanding into Milestone 2 features.
 
 ## Execution Model
 - One program-level design doc governs the four-milestone sequence.
 - Only the active milestone may have open implementation issues.
-- Milestone 1 must treat the `torch.nn`, `torch.nn.functional`, and `torch.optim` restrictions as hard implementation constraints, with only the explicitly permitted exceptions from the requirement file.
-- Implementation tasks must be small enough to review safely. Target PR size is about 200 lines of code, and PRs over 500 lines should be avoided unless explicitly approved.
+- Milestone 1 must treat the `torch.nn`, `torch.nn.functional`, and `torch.optim` restrictions as hard constraints, with only the explicitly permitted exceptions from `requirement.md`.
+- Each implementation task must stay small and reviewable.
 - Each milestone ends with:
-  - documentation updated
+  - user-facing documentation updated
+  - reviewer evidence updated
   - validation artifacts collected
   - human review request sent
   - explicit stop on forward development
-- No Milestone 2 or later implementation begins before written approval on the prior milestone.
+- No Milestone 2 or later work begins before written approval on the prior milestone.
 
 ## Milestone Plan
 
 ### Milestone 1: Core Training Stack
 Goal:
-- Produce a single-GPU trainer with custom core components, checkpointing, automated tests, CI, and complete documentation.
+- Deliver a real end-to-end small language model training project that an external GitHub user can install, train on TinyStories with one GPU, resume from checkpoints, and use to generate English story text.
+
+Required Deliverables:
+- BPE tokenizer
+- Transformer language model
+- cross-entropy loss
+- AdamW optimizer
+- training loop
+- support for serializing and loading model state
+- support for serializing and loading optimizer state
+- runnable `train.py` for TinyStories single-GPU training
+- supported generation API for trained checkpoints
+- CI training smoke with loss validation
+- GitHub-user-facing documentation for build, train, resume, and generation
 
 Hard Constraints:
-- Single-GPU training and validation target the available GeForce RTX 3080.
-- Do not use definitions from `torch.nn`, `torch.nn.functional`, or `torch.optim` other than the explicitly allowed exceptions in the requirement file.
+- Single-GPU support only.
+- Do not use definitions from `torch.nn`, `torch.nn.functional`, or `torch.optim` other than the explicitly allowed exceptions in `requirement.md`.
+- Keep the training or generation UX to the minimum needed for Milestone 1 delivery.
+
+In Scope For Remaining Milestone 1 Work:
+- Training entry point and config contract
+- TinyStories end-to-end runnable training path
+- Checkpoint-aware resume behavior in the public training flow
+- Public generation API for trained checkpoints
+- CI smoke training with loss assertions
+- README and supporting docs written for external users
+
+Out Of Scope For Remaining Milestone 1 Work:
+- Multi-GPU training
+- Benchmarking or profiling
+- Inference service or web app
+- Advanced sampling features beyond a minimal useful generation API
+- New model architecture experiments
 
 Task Breakdown:
-1. Repository scaffold and developer workflow
-   - Define package layout, configuration layout, local quality checks, and CI entry points.
-2. Data and tokenizer foundation
-   - Implement BPE tokenizer training, encode/decode, dataset loading, and preprocessing for TinyStories and OpenWebText.
-3. Core model and math primitives
-   - Implement transformer blocks and cross-entropy without forbidden `torch.nn` or `torch.nn.functional` definitions.
-4. Optimizer and training loop
-   - Implement AdamW, batching, gradient flow, logging, checkpoint save/load, and resume behavior.
-5. Validation and documentation
-   - Add component and integration tests, CI coverage, setup instructions, architecture notes, and milestone runbook.
+1. Training UX and configuration surface
+   - Add a runnable `train.py` entry point.
+   - Define the minimum config and argument contract needed to train, resume, choose output paths, and point to TinyStories data.
+   - Keep the training interface operational and reviewable rather than feature-rich.
+2. TinyStories end-to-end training integration
+   - Wire tokenizer training or loading, dataset preparation, batching, model build, optimizer build, training loop, checkpoint cadence, and resume behavior into the training entry point.
+   - Prove the path works on the target single GPU.
+3. Generation API for trained models
+   - Expose a public Python API that loads the tokenizer and trained checkpoint, accepts a prompt, and returns generated English story text.
+   - Keep the first version minimal and deterministic enough to test.
+4. CI/CD upgrade with real training smoke
+   - Add a deterministic TinyStories smoke path to CI that runs a few real training steps.
+   - Assert training produces finite loss and that the final loss stays within an approved bound on the deterministic smoke fixture.
+   - Keep the existing lint and unit checks.
+5. GitHub-user-facing documentation
+   - Rewrite the README and supporting docs for external users.
+   - Cover install, dataset preparation, how to run `train.py`, how to resume, how to call the generation API, artifact layout, and expected outputs.
+   - Keep reviewer-only milestone evidence separate from user onboarding.
 
 Dependencies:
-- Task 1 before all others.
-- Task 2 before full training integration.
-- Task 3 before Task 4.
-- Task 4 before Task 5 integration validation.
+- Task 1 before Tasks 2, 3, and 5.
+- Task 2 before Task 3 end-to-end validation.
+- Task 2 before Task 4 final smoke configuration.
+- Tasks 2, 3, and 4 before Task 5 is finalized.
 
 Exit Evidence:
-- Single-GPU train run completes.
-- Model and optimizer checkpoints save and reload correctly.
-- Tests pass.
-- CPU-based GitHub CI runs successfully.
-- Documentation is complete.
-- A review artifact shows sample outputs with at least basic fluency for simple children's story generation.
+- `train.py` runs TinyStories training end to end on one GPU.
+- Public training flow supports checkpoint save and resume.
+- Public generation API loads the trained model and produces English story output from a prompt.
+- CI runs a real training smoke and validates loss behavior automatically.
+- README and supporting docs let a GitHub user build, train, resume, and generate without milestone-specific insider knowledge.
+- Human review confirms Milestone 1 is delivered.
 
 ### Milestone 2: Performance and Multi-GPU Training
 Goal:
@@ -98,7 +150,6 @@ Task Breakdown:
 
 Dependencies:
 - Milestone 1 approval is required before any Milestone 2 issue is opened.
-- Harness work should precede optimization and distributed tuning.
 
 ### Milestone 3: Data Processing Pipeline
 Goal:
@@ -129,57 +180,45 @@ Dependencies:
 - Milestone 3 approval is required before any Milestone 4 issue is opened.
 
 ## CI/CD Requirements
-- Milestone 1 must add automated checks for linting, tests, and packaging or import sanity.
-- CI must gate merges for milestone-scoped branches or PRs.
-- Hosted CI may remain CPU-based; GPU-required validation should be documented and run separately on the available local GPU.
-- Later milestones may extend CI, but milestone-specific validation must stay reviewable and reproducible.
+- Milestone 1 CI must gate merges with:
+  - formatting and lint checks
+  - unit tests
+  - import or packaging sanity
+  - deterministic training smoke that runs a few real training steps and checks loss behavior
+- The training smoke may remain CPU-based if it is deterministic and reviewable, but the Milestone 1 exit gate still requires separate one-GPU validation on the RTX 3080.
+- CI changes must stay minimal and milestone-specific; do not add unrelated platform work.
 
 ## Dependency and Installation Requirements
-- Expected baseline: Python, PyTorch, tokenizer and dataset-processing dependencies, test runner, lint or format tooling, and CI config.
-- Exact dependency additions should be proposed during milestone ticketing, not assumed in this design doc.
-- Installation instructions must cover local setup, dataset acquisition steps, and any GPU-specific prerequisites.
+- Current required runtime dependency: PyTorch.
+- No additional mandatory runtime dependency is planned for the remaining Milestone 1 recovery work unless a specific implementation task justifies it explicitly.
+- Installation instructions must cover:
+  - clean CPU setup
+  - optional CUDA-enabled local environment for single-GPU training
+  - TinyStories dataset acquisition or placement
+  - how to run `train.py`
+  - how to resume from checkpoints
+  - how to call the generation API
 
 ## Documentation Requirements
-- Root README with project overview and milestone status
-- Developer setup guide
-- Milestone-specific runbooks for training, validation, and review evidence
-- Architecture notes for major subsystem boundaries
-- Dataset preparation instructions and provenance notes where relevant
+- Root README must describe the project for external GitHub users with zero prior context.
+- Documentation must explain:
+  - what the project does
+  - how to install it
+  - how to prepare TinyStories
+  - how to run end-to-end training
+  - how to resume training
+  - how to generate text from a trained checkpoint
+  - what artifacts are created and where they live
+- Reviewer-facing milestone runbooks may remain, but they must not substitute for user-facing docs.
 
-## Proposed Milestone 1 Ticket Set After Approval
-1. Repository layout and package scaffold
-   - Objective: create the Python package layout, config directories, and baseline module boundaries.
-2. Local quality workflow and GitHub CI baseline
-   - Objective: add formatter or lint tooling, test runner wiring, and CPU-based GitHub Actions checks.
-3. TinyStories dataset ingestion
-   - Objective: add reproducible download or load flow and normalized sample iteration for TinyStories.
-4. OpenWebText dataset ingestion
-   - Objective: add reproducible download or load flow and normalized sample iteration for OpenWebText.
-5. BPE vocabulary training
-   - Objective: implement merge statistics and vocab construction for tokenizer training.
-6. BPE encode or decode path
-   - Objective: implement runtime tokenization, detokenization, and tokenizer serialization.
-7. Token and position embedding modules
-   - Objective: implement trainable embedding layers and sequence position handling within the Milestone 1 restrictions.
-8. Attention math primitives
-   - Objective: implement attention projections, masking, score computation, and output projection.
-9. Feed-forward and normalization primitives
-   - Objective: implement the non-attention transformer block components required for the model stack.
-10. Transformer model assembly
-   - Objective: assemble the language model stack and logits path from the custom primitives.
-11. Custom cross-entropy loss
-   - Objective: implement the training loss path without using forbidden functional helpers.
-12. AdamW optimizer core
-   - Objective: implement optimizer state initialization and parameter update steps.
-13. Training step orchestration
-   - Objective: implement forward, backward, gradient application, and basic logging for one step or epoch loop.
-14. Model checkpoint serialization
-   - Objective: save and restore model state deterministically.
-15. Optimizer checkpoint serialization
-   - Objective: save and restore optimizer state deterministically.
-16. Single-GPU integration run
-   - Objective: run a minimal training job on the RTX 3080 and capture evidence that the stack trains and resumes.
-17. Core unit tests
-   - Objective: add focused tests for tokenizer, model primitives, loss, optimizer, and checkpoint code.
-18. Milestone 1 documentation and review runbook
-   - Objective: document setup, commands, validation evidence, and milestone review criteria.
+## Proposed Remaining Milestone 1 Ticket Set After Human Approval
+1. Runnable TinyStories training entry point
+   - Objective: add `train.py`, argument/config parsing, output directory handling, and checkpoint-aware resume wiring.
+2. End-to-end TinyStories training integration
+   - Objective: connect tokenizer, dataset ingestion, model, optimizer, training loop, and checkpoint cadence into the public training path.
+3. Trained-model generation API
+   - Objective: add a public Python API that loads tokenizer plus checkpoint and generates story text from a prompt.
+4. CI training smoke and loss gate
+   - Objective: add deterministic smoke training in GitHub Actions and assert acceptable loss behavior.
+5. GitHub-user documentation refresh
+   - Objective: rewrite README and supporting docs around install, data prep, training, resume, generation, and artifact inspection.
