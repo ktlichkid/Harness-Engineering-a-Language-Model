@@ -31,5 +31,8 @@ jobs:
       - name: Verify package imports compile
         run: python -m compileall src tests
 
+      - name: Run deterministic TinyStories smoke training
+        run: PYTHONPATH=src python tests/integration/run_issue48_ci_smoke.py
+
       - name: Run tests
         run: python -m pytest
