@@ -1,0 +1,24 @@
+{
+  "tinystories_config_path": "configs/milestone1/tinystories.json",
+  "tinystories_split": "train",
+  "output_dir": "artifacts/tinystories-train",
+  "device": "cuda",
+  "download_data": true,
+  "model": {
+    "hidden_size": 64,
+    "num_heads": 4,
+    "intermediate_size": 128,
+    "num_layers": 2
+  },
+  "optimizer": {
+    "learning_rate": 0.01,
+    "weight_decay": 0.0
+  },
+  "training": {
+    "seed": 45,
+    "total_steps": 160,
+    "batch_size": 1,
+    "checkpoint_interval": 80,
+    "target_vocab_size": 96
+  }
+}

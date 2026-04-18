@@ -46,7 +46,7 @@ class TinyStoryRecord:
 def load_tinystories_config(config_path: str | Path, split: str) -> TinyStoriesConfig:
     """Load TinyStories split settings from a checked-in JSON config."""
 
-    config_data = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    config_data = json.loads(Path(config_path).read_text(encoding="utf-8-sig"))
     split_data = config_data["splits"][split]
     return TinyStoriesConfig(
         split=split,
