@@ -3,7 +3,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from small_scale_llm.training import TrainCliOverrides, load_training_config, prepare_training_run
+from small_scale_llm.training import (
+    TrainCliOverrides,
+    load_training_config,
+    prepare_training_run,
+    run_prepared_training,
+)
 
 
 class TrainingEntrypointConfigTests(unittest.TestCase):
@@ -185,6 +190,163 @@ class TrainingEntrypointPreparationTests(unittest.TestCase):
                         "batch_size": 1,
                         "checkpoint_interval": 5,
                         "target_vocab_size": 64,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        return config_path
+
+
+class TrainingEntrypointExecutionTests(unittest.TestCase):
+    def test_run_prepared_training_executes_end_to_end_and_writes_checkpoints(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            dataset_path = root / "TinyStories-train.txt"
+            dataset_path.write_text(
+                "hello world hello world<|endoftext|>another short story line<|endoftext|>",
+                encoding="utf-8",
+            )
+
+            tinystories_config_path = self._write_tinystories_config(root, dataset_path)
+            output_dir = root / "artifacts"
+            training_config_path = self._write_training_config(
+                root,
+                tinystories_config_path,
+                output_dir,
+                total_steps=3,
+            )
+            run = prepare_training_run(
+                training_config_path,
+                overrides=TrainCliOverrides(
+                    tinystories_path=dataset_path,
+                    download_data=False,
+                ),
+            )
+
+            summary = run_prepared_training(run)
+
+            self.assertEqual(summary.completed_steps, 3)
+            self.assertEqual(summary.start_step, 0)
+            self.assertEqual(summary.end_step, 3)
+            self.assertEqual(summary.device, "cpu")
+            self.assertTrue(summary.tokenizer_path.exists())
+            self.assertIsNotNone(summary.latest_checkpoint)
+            assert summary.latest_checkpoint is not None
+            self.assertEqual(summary.latest_checkpoint.step, 3)
+            self.assertTrue(summary.latest_checkpoint.model_path.exists())
+            self.assertTrue(summary.latest_checkpoint.optimizer_path.exists())
+
+            state = json.loads(run.state_path.read_text(encoding="utf-8"))
+            self.assertEqual(state["latest_checkpoint"]["step"], 3)
+            self.assertEqual(state["tokenizer_path"], str(summary.tokenizer_path))
+
+    def test_run_prepared_training_resume_continues_from_latest_checkpoint(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            dataset_path = root / "TinyStories-train.txt"
+            dataset_path.write_text(
+                "resume path story one<|endoftext|>resume path story two<|endoftext|>",
+                encoding="utf-8",
+            )
+
+            tinystories_config_path = self._write_tinystories_config(root, dataset_path)
+            output_dir = root / "artifacts"
+            initial_config = self._write_training_config(
+                root,
+                tinystories_config_path,
+                output_dir,
+                total_steps=2,
+            )
+            initial_run = prepare_training_run(
+                initial_config,
+                overrides=TrainCliOverrides(
+                    tinystories_path=dataset_path,
+                    download_data=False,
+                ),
+            )
+            first_summary = run_prepared_training(initial_run)
+            self.assertEqual(first_summary.end_step, 2)
+
+            resumed_config = self._write_training_config(
+                root,
+                tinystories_config_path,
+                output_dir,
+                total_steps=3,
+            )
+            resumed_run = prepare_training_run(
+                resumed_config,
+                overrides=TrainCliOverrides(
+                    tinystories_path=dataset_path,
+                    download_data=False,
+                    resume=True,
+                ),
+            )
+
+            resumed_summary = run_prepared_training(resumed_run)
+
+            self.assertEqual(resumed_summary.start_step, 2)
+            self.assertEqual(resumed_summary.completed_steps, 1)
+            self.assertEqual(resumed_summary.end_step, 3)
+            self.assertIsNotNone(resumed_summary.latest_checkpoint)
+            assert resumed_summary.latest_checkpoint is not None
+            self.assertEqual(resumed_summary.latest_checkpoint.step, 3)
+            self.assertTrue(resumed_summary.latest_checkpoint.model_path.exists())
+            self.assertTrue(resumed_summary.latest_checkpoint.optimizer_path.exists())
+
+    def _write_tinystories_config(self, root: Path, dataset_path: Path) -> Path:
+        config_path = root / "tinystories.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "dataset_id": "roneneldan/TinyStories",
+                    "cache_dir": str(dataset_path.parent),
+                    "splits": {
+                        "train": {
+                            "filename": dataset_path.name,
+                            "source_url": "https://example.invalid/tinystories-train.txt",
+                        }
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        return config_path
+
+    def _write_training_config(
+        self,
+        root: Path,
+        tinystories_config_path: Path,
+        output_dir: Path,
+        *,
+        total_steps: int,
+    ) -> Path:
+        config_path = root / "train_tinystories.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "tinystories_config_path": str(tinystories_config_path),
+                    "tinystories_split": "train",
+                    "output_dir": str(output_dir),
+                    "device": "cpu",
+                    "download_data": False,
+                    "model": {
+                        "hidden_size": 16,
+                        "num_heads": 4,
+                        "intermediate_size": 32,
+                        "num_layers": 1,
+                    },
+                    "optimizer": {
+                        "learning_rate": 0.005,
+                        "weight_decay": 0.0,
+                    },
+                    "training": {
+                        "seed": 7,
+                        "total_steps": total_steps,
+                        "batch_size": 1,
+                        "checkpoint_interval": 1,
+                        "target_vocab_size": 48,
+                        "sequence_length": 4,
                     },
                 }
             ),
